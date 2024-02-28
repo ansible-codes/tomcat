@@ -1,0 +1,38 @@
+---
+- name: Ensure wget and tar are installed
+  ansible.builtin.yum:
+    name:
+      - wget
+      - tar
+    state: present
+
+- name: Download Tomcat
+  ansible.builtin.get_url:
+    url: "{{ tomcat_download_url }}"
+    dest: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+    timeout: 60
+  become: yes
+
+- name: Extract Tomcat
+  ansible.builtin.unarchive:
+    src: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+    dest: "{{ tomcat_install_dir }}"
+    remote_src: yes
+    creates: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}"
+  become: yes
+
+- name: Update symbolic link to new Tomcat version
+  ansible.builtin.file:
+    src: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}"
+    dest: "{{ tomcat_install_dir }}/latest"
+    state: link
+    force: yes
+  become: yes
+
+- name: Ensure Tomcat service is restarted (example using systemd)
+  ansible.builtin.systemd:
+    name: tomcat
+    state: restarted
+    enabled: yes
+    daemon_reload: yes
+  become: yes
