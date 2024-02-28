@@ -1,0 +1,4 @@
+- hosts: tomcat_servers
+  become: yes
+  roles:
+    - tomcat_upgrade
